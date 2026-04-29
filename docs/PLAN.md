@@ -195,6 +195,9 @@ v0.1 should support at least:
 - v0.1 uses a single global gateway token.
 - Admin login uses `ADMIN_USERNAME` and `ADMIN_PASSWORD` from env/config.
 - Do not recommend exposing port `8000` directly to the public internet.
+- v0.1 does not implement CSRF protection for admin form posts. Keep the WebUI LAN/VPN-only.
+- Future hardening should add CSRF tokens or same-origin custom headers for all admin mutations.
+- Default `ADMIN_PASSWORD`, `GATEWAY_TOKEN`, and `SESSION_SECRET` are for testing only. Users should modify them in `.env` before regular use.
 
 ## v0.1 Milestones
 
@@ -210,6 +213,13 @@ v0.1 should support at least:
 10. Add WebUI dashboard, provider page, preset page, integration URL page, cache/log pages.
 11. Add Dockerfile, docker-compose.yml, `.env.example`, and quick-start docs.
 12. Verify Docker Compose startup, WebUI login, provider test audio, cache hit, and reading URL audio response.
+
+## Future Hardening
+
+- Add CSRF protection for `/admin/api/*` mutation endpoints.
+- Warn or fail startup when production runs with default `ADMIN_PASSWORD`, `GATEWAY_TOKEN`, or `SESSION_SECRET`.
+- Support HTTPS-aware secure cookies behind reverse proxies.
+- Add provider delete safeguards when presets still reference the provider.
 
 ## GitHub Readiness
 

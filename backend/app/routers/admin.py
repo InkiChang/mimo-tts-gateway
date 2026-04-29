@@ -32,9 +32,9 @@ _jinja_env = Environment(
 )
 
 
-def _render(name: str, context: dict | None = None) -> HTMLResponse:
+def _render(name: str, context: dict | None = None, status_code: int = 200) -> HTMLResponse:
     template = _jinja_env.get_template(name)
-    return HTMLResponse(template.render(**(context or {})))
+    return HTMLResponse(template.render(**(context or {})), status_code=status_code)
 
 
 def _check_auth(request: Request) -> bool:
@@ -67,7 +67,9 @@ async def login(request: Request, username: str = Form(...), password: str = For
         )
         return response
 
-    return _render("login.html", {"error": "Invalid username or password"},
+    return _render(
+        "login.html",
+        {"error": "Invalid username or password"},
         status_code=401,
     )
 

@@ -17,6 +17,8 @@ ADAPTERS: dict[str, BaseAdapter] = {
     "chat_completions_audio": ChatCompletionsAudioAdapter(),
 }
 
+synthesis_semaphore = asyncio.Semaphore(config.MAX_CONCURRENT_SYNTHESIS)
+
 
 def get_adapter(request_mode: str) -> BaseAdapter:
     adapter = ADAPTERS.get(request_mode)
@@ -70,6 +72,9 @@ async def synthesize(preset_name: str, text: str) -> bytes:
     style = preset.get("style", "")
     fmt = preset.get("format") or provider.get("output_format", "mp3")
     speed = preset.get("speed", 1.0)
+    text_prefix = preset.get("text_prefix") or ""
+    text_suffix = preset.get("text_suffix") or ""
+    effective_text = f"{text_prefix}{normalized}{text_suffix}"
     request_mode = provider.get("request_mode", "chat_completions_audio")
     response_mode = provider.get("response_mode", "base64_audio_in_choices")
 
@@ -83,11 +88,11 @@ async def synthesize(preset_name: str, text: str) -> bytes:
         model=provider["model"],
         voice=voice,
         style=style,
-        text=normalized,
+        text=effective_text,
         fmt=fmt,
         speed=speed,
-        text_prefix=preset.get("text_prefix"),
-        text_suffix=preset.get("text_suffix"),
+        text_prefix=text_prefix,
+        text_suffix=text_suffix,
     )
 
     # Check cache
@@ -121,15 +126,35 @@ async def synthesize(preset_name: str, text: str) -> bytes:
         # Double-check cache after acquiring lock
         cached = cache_service.check_cache(cache_key, config.CACHE_DIR)
         if cached:
+            start_time = time.time()
             with open(cached["file_path"], "rb") as f:
-                return f.read()
+                audio = f.read()
+            elapsed = (time.time() - start_time) * 1000
+            log_service.log_request(
+                path="/tts",
+                provider_id=provider["id"],
+                preset_name=preset_name,
+                raw_text_length=raw_len,
+                normalized_text_length=norm_len,
+                text_hash=text_hash_val,
+                cache_hit=True,
+                status_code=200,
+                latency_ms=int(elapsed),
+            )
+            return audio
 
         try:
             adapter = get_adapter(request_mode)
-            provider_with_style = {**provider, "_preset_style": style}
-            request_body = adapter.build_request(normalized, provider_with_style)
+            provider_with_style = {
+                **provider,
+                "_preset_style": style,
+                "default_voice": voice,
+                "output_format": fmt,
+            }
+            request_body = adapter.build_request(effective_text, provider_with_style)
 
-            audio = await _call_upstream(provider, request_body, adapter)
+            async with synthesis_semaphore:
+                audio = await _call_upstream(provider, request_body, adapter)
 
             cache_service.save_cache(
                 cache_key=cache_key,
@@ -235,15 +260,21 @@ async def test_synthesis(provider: dict, voice: str, style: str, fmt: str, text:
     request_mode = provider.get("request_mode", "chat_completions_audio")
     adapter = get_adapter(request_mode)
 
-    provider_with_style = {**provider, "_preset_style": style}
+    effective_voice = voice or provider.get("default_voice", "")
+    effective_fmt = fmt or provider.get("output_format", "mp3")
 
-    if "default_voice" not in provider_with_style:
-        provider_with_style["default_voice"] = voice
+    provider_with_style = {
+        **provider,
+        "_preset_style": style,
+        "default_voice": effective_voice,
+        "output_format": effective_fmt,
+    }
 
     request_body = adapter.build_request(normalized, provider_with_style)
 
     start = time.time()
-    audio = await _call_upstream(provider_with_style, request_body, adapter)
+    async with synthesis_semaphore:
+        audio = await _call_upstream(provider_with_style, request_body, adapter)
     elapsed = (time.time() - start) * 1000
 
     # Cache test results too, using simple cache key
@@ -253,10 +284,10 @@ async def test_synthesis(provider: dict, voice: str, style: str, fmt: str, text:
         request_mode=request_mode,
         response_mode=provider.get("response_mode", "base64_audio_in_choices"),
         model=provider["model"],
-        voice=voice,
+        voice=effective_voice,
         style=style,
         text=normalized,
-        fmt=fmt,
+        fmt=effective_fmt,
         speed=1.0,
     )
 
@@ -266,10 +297,10 @@ async def test_synthesis(provider: dict, voice: str, style: str, fmt: str, text:
             cache_key=cache_key,
             provider_id=provider["id"],
             model=provider["model"],
-            voice=voice,
+            voice=effective_voice,
             text_hash=text_service.text_hash(text),
             style=style,
-            fmt=fmt,
+            fmt=effective_fmt,
             audio_data=audio,
             cache_root=config.CACHE_DIR,
         )
@@ -277,6 +308,6 @@ async def test_synthesis(provider: dict, voice: str, style: str, fmt: str, text:
     return {
         "success": True,
         "latency_ms": int(elapsed),
-        "audio_url": f"/admin/api/test-audio/{cache_key}.{fmt}",
+        "audio_url": f"/admin/api/test-audio/{cache_key}.{effective_fmt}",
         "cache_hit": bool(cached),
     }

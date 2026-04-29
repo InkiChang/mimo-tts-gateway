@@ -20,7 +20,7 @@ mimo-tts-gateway lets you connect MiMo TTS compatible APIs to reading apps throu
 ### 1. Clone
 
 ```bash
-git clone https://github.com/YOUR_USER/mimo-tts-gateway.git
+git clone https://github.com/InkiChang/mimo-tts-gateway.git
 cd mimo-tts-gateway
 ```
 
@@ -34,6 +34,14 @@ Edit `.env` and set:
 - `GATEWAY_TOKEN` - token for reading app access
 - `ADMIN_USERNAME` / `ADMIN_PASSWORD` - WebUI login
 - `SESSION_SECRET` - random string for session encryption
+
+For local testing, the example defaults are enough. For normal use, change at least:
+
+```env
+ADMIN_PASSWORD=your-strong-password
+GATEWAY_TOKEN=your-random-gateway-token
+SESSION_SECRET=your-random-session-secret
+```
 
 ### 3. Start
 
@@ -81,6 +89,7 @@ http://YOUR_NAS_IP:8000/tts?token=YOUR_GATEWAY_TOKEN&preset=default&text={{speak
 - The gateway token should be kept secret
 - Upstream API keys are stored in the SQLite database on disk
 - Session cookies are HTTP-only
+- CSRF protection is not enabled in v0.1; keep the admin WebUI on LAN/VPN only
 
 ## License
 

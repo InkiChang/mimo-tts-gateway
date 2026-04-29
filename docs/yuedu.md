@@ -13,7 +13,7 @@
 | 字段 | 值 |
 |------|-----|
 | 名称 | `MiMo TTS (冰糖)` |
-| 朗读引擎 URL | `http://192.168.3.172:8000/tts?token=dev-token-001&preset=default&text={{`{{}}`speakText{{`}}`}}` |
+| 朗读引擎 URL | `http://YOUR_SERVER_IP:8000/tts?token=YOUR_GATEWAY_TOKEN&preset=default&text={{speakText}}` |
 | 内容类型 | `audio/mpeg` |
 
 > **注意**：填入 URL 时，`speakText` 必须用双花括号 `{{speakText}}`。
@@ -35,7 +35,7 @@ legado://import/httpTTS?src=https://raw.githubusercontent.com/<YOUR_REPO>/main/d
 ```json
 [{
   "name": "MiMo TTS (冰糖)",
-  "url": "http://192.168.3.172:8000/tts?token=dev-token-001&preset=default&text={{speakText}}",
+  "url": "http://YOUR_SERVER_IP:8000/tts?token=YOUR_GATEWAY_TOKEN&preset=default&text={{speakText}}",
   "contentType": "audio/mpeg"
 }]
 ```
@@ -49,13 +49,13 @@ legado://import/httpTTS?src=https://raw.githubusercontent.com/<YOUR_REPO>/main/d
 
 ## 多预设配置
 
-可以在网关 WebUI（`http://192.168.3.172:8000/admin/setup`）中创建多个 Preset，然后为阅读 App 添加多个朗读引擎：
+可以在网关 WebUI（`http://YOUR_SERVER_IP:8000/admin/setup`）中创建多个 Preset，然后为阅读 App 添加多个朗读引擎：
 
 | 引擎名称 | URL |
 |----------|-----|
-| MiMo 默认 | `http://192.168.3.172:8000/tts?token=dev-token-001&preset=default&text={{`{{}}`speakText{{`}}`}}` |
-| MiMo 睡前 | `http://192.168.3.172:8000/tts?token=dev-token-001&preset=sleep&text={{`{{}}`speakText{{`}}`}}` |
-| MiMo 快速 | `http://192.168.3.172:8000/tts?token=dev-token-001&preset=fast&text={{`{{}}`speakText{{`}}`}}` |
+| MiMo 默认 | `http://YOUR_SERVER_IP:8000/tts?token=YOUR_GATEWAY_TOKEN&preset=default&text={{speakText}}` |
+| MiMo 睡前 | `http://YOUR_SERVER_IP:8000/tts?token=YOUR_GATEWAY_TOKEN&preset=sleep&text={{speakText}}` |
+| MiMo 快速 | `http://YOUR_SERVER_IP:8000/tts?token=YOUR_GATEWAY_TOKEN&preset=fast&text={{speakText}}` |
 
 > **说明**：Legado 会自动对 `{{speakText}}` 进行 URL 编码，不需要手动编码。语音速度可以通过 Legado 自带的语速滑块调节（不影响网关）。
 

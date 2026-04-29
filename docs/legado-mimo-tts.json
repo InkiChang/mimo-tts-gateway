@@ -1,5 +1,5 @@
 {
   "name": "MiMo TTS (冰糖)",
-  "url": "http://192.168.3.172:8000/tts?token=dev-token-001&preset=default&text={{speakText}}",
+  "url": "http://YOUR_SERVER_IP:8000/tts?token=YOUR_GATEWAY_TOKEN&preset=default&text={{speakText}}",
   "contentType": "audio/mpeg"
 }
