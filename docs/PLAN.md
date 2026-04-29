@@ -10,6 +10,53 @@ Source planning document:
 
 ## v0.1 Scope
 
+Current implementation status: v0.1.1 has been implemented and pushed to GitHub.
+
+GitHub repository: `https://github.com/InkiChang/mimo-tts-gateway`
+
+Latest implementation commit: `ce6523e v0.1.1: harden docs and gateway behavior`
+
+Implemented v0.1.1 scope:
+
+- Docker / Docker Compose deployment files
+- Admin login
+- WebUI provider configuration
+- WebUI preset configuration
+- `GET /tts` for reading apps
+- Third-party relay API support via `chat_completions_audio`
+- Custom `base_url`, `endpoint`, `api_key`, `model`, `voice`
+- Audio cache with SQLite index
+- Gateway token authentication
+- Provider test synthesis
+- Legado/reading app URL generation
+- Basic request logs
+- Health check
+- Single-process in-flight request merging
+- `MAX_CONCURRENT_SYNTHESIS` upstream concurrency limit
+
+Verified integration:
+
+- Relay API: `https://fufu.iqach.top/v1/chat/completions`
+- Model: `mimo-v2.5-tts`
+- Voice: `冰糖`
+- Format: `mp3`
+- Response mode: `base64_audio_in_choices`
+- Legado / 阅读 App: verified working through `/tts`
+
+Not implemented yet:
+
+- Official MiMo API verification
+- `POST /api/tts`
+- `POST /v1/tts`
+- `audio_speech` adapter
+- `audio_url` response mode
+- Custom JSON/Form templates
+- Multi-user / multi-token management
+- CSRF protection for admin forms
+- Cache size/time/LRU cleanup
+
+Historical intended scope:
+
 Must have:
 
 - Docker / Docker Compose deployment
@@ -48,7 +95,7 @@ Explicitly out of scope for v0.1:
 ```text
 Reading app / TTS client
         ↓
-GET /tts or POST /v1/tts
+GET /tts（implemented）or future POST /api/tts
         ↓
 mimo-tts-gateway
         ↓
@@ -64,7 +111,7 @@ Adapter layer: official or relay API request
         ↓
 Upstream API: MiMo official / relay / OpenAI-compatible endpoint
         ↓
-Response parser: base64 audio / binary audio / audio_url
+Response parser: base64 audio / binary audio（audio_url future）
         ↓
 Cache audio and return audio/*
 ```
@@ -153,10 +200,10 @@ Reading app endpoint:
 GET /tts?token=xxx&preset=default&text=你好
 ```
 
-Programmatic endpoint:
+Programmatic endpoint, future:
 
 ```http
-POST /v1/tts
+POST /api/tts
 Authorization: Bearer <gateway-token>
 Content-Type: application/json
 ```
@@ -220,6 +267,35 @@ v0.1 should support at least:
 - Warn or fail startup when production runs with default `ADMIN_PASSWORD`, `GATEWAY_TOKEN`, or `SESSION_SECRET`.
 - Support HTTPS-aware secure cookies behind reverse proxies.
 - Add provider delete safeguards when presets still reference the provider.
+
+## Handoff Notes
+
+Current local project path:
+
+```text
+/home/inkichang/.opencode/program/mimo-tts-gateway
+```
+
+Current local test runtime:
+
+```bash
+cd /home/inkichang/.opencode/program/mimo-tts-gateway/backend
+DATA_DIR=./data CACHE_DIR=./data/cache DATABASE_PATH=./data/gateway.sqlite \
+GATEWAY_TOKEN=dev-token-001 \
+ADMIN_USERNAME=admin ADMIN_PASSWORD=admin123 \
+SESSION_SECRET=dev-session \
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+Before continuing work:
+
+```bash
+git status --short
+git log --oneline -5
+python -m compileall -q backend/app scripts
+```
+
+Do not commit `.env`, SQLite database files, cache audio files, real gateway tokens, or real upstream API keys.
 
 ## GitHub Readiness
 
