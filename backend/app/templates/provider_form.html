@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if editing else 'Add' }} Provider{% endblock %}
+{% block content %}
+
+<h1>{{ 'Edit' if editing else 'Add' }} Provider</h1>
+
+<form method="post" action="/admin/api/providers/{{ provider.id }}/edit" class="form-grid">
+    <label>Name * <input type="text" name="name" value="{{ provider.name }}" required></label>
+    <label>Type <select name="provider_type"><option value="mimo_chat_completions" {{ 'selected' if provider.provider_type == 'mimo_chat_completions' }}>MiMo Chat Completions</option></select></label>
+    <label>Base URL * <input type="text" name="base_url" value="{{ provider.base_url }}" required></label>
+    <label>Endpoint <input type="text" name="endpoint" value="{{ provider.endpoint }}"></label>
+    <label>API Key <input type="password" name="api_key" value="{{ provider.api_key or '' }}"></label>
+    <label>Auth Type <select name="auth_type"><option value="bearer" {{ 'selected' if provider.auth_type == 'bearer' }}>Bearer</option><option value="api_key" {{ 'selected' if provider.auth_type == 'api_key' }}>API Key Header</option></select></label>
+    <label>Auth Header Name <input type="text" name="auth_header_name" value="{{ provider.auth_header_name }}"></label>
+    <label>Model * <input type="text" name="model" value="{{ provider.model }}" required></label>
+    <label>Default Voice <input type="text" name="default_voice" value="{{ provider.default_voice or '' }}"></label>
+    <label>Output Format <select name="output_format"><option value="mp3" {{ 'selected' if provider.output_format == 'mp3' }}>mp3</option><option value="wav" {{ 'selected' if provider.output_format == 'wav' }}>wav</option></select></label>
+    <label>Timeout (seconds) <input type="number" name="timeout_seconds" value="{{ provider.timeout_seconds }}"></label>
+    <label>Retry Count <input type="number" name="retry_count" value="{{ provider.retry_count }}"></label>
+    <label class="form-actions">
+        <button type="submit">Save</button>
+        <a href="/admin/setup">Cancel</a>
+    </label>
+</form>
+
+{% endblock %}

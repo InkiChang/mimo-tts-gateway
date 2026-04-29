@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Logs{% endblock %}
+{% block content %}
+
+<h1>Logs</h1>
+
+<section>
+    <h2>Cache Status</h2>
+    <div class="stats">
+        <div class="stat">
+            <span class="stat-value">{{ cache_stats.file_count }}</span>
+            <span class="stat-label">Cached Files</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ (cache_stats.total_size_bytes / 1024 / 1024) | round(1) }} MB</span>
+            <span class="stat-label">Cache Size</span>
+        </div>
+    </div>
+    <form method="post" action="/admin/api/cache/clear" style="margin-top:12px" onsubmit="return confirm('Clear all cached audio files?')">
+        <button class="btn-small btn-danger">Clear All Cache</button>
+    </form>
+</section>
+
+<section>
+    <h2>Recent Requests</h2>
+    {% if logs %}
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Path</th>
+                <th>Preset</th>
+                <th>Text Len</th>
+                <th>Cache</th>
+                <th>Status</th>
+                <th>Latency</th>
+                <th>Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr class="{{ 'row-error' if log.status_code and log.status_code >= 400 else '' }}">
+                <td>{{ log.created_at[:16] }}</td>
+                <td><code>{{ log.path }}</code></td>
+                <td>{{ log.preset_name or '-' }}</td>
+                <td>{{ log.normalized_text_length or log.raw_text_length or '-' }}</td>
+                <td>{{ 'Hit' if log.cache_hit else 'Miss' }}</td>
+                <td>
+                    <span class="badge {{ 'badge-error' if log.status_code and log.status_code >= 400 else 'badge-ok' }}">
+                        {{ log.status_code or '-' }}
+                    </span>
+                </td>
+                <td>{{ log.latency_ms }}ms</td>
+                <td>
+                    {% if log.error_type %}
+                    <span title="{{ log.error_message or '' }}">{{ log.error_type }}</span>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No requests logged yet.</p>
+    {% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Integration{% endblock %}
+{% block content %}
+
+<h1>Integration</h1>
+
+<section>
+    <h2>Reading App TTS URL</h2>
+    <p>Configure your reading app (Legado/阅读/Yuedu) with one of these URLs:</p>
+
+    {% if presets %}
+    <table>
+        <thead>
+            <tr>
+                <th>Preset</th>
+                <th>Provider</th>
+                <th>Voice</th>
+                <th>TTS URL</th>
+                <th>Copy</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in presets %}
+            <tr>
+                <td><strong>{{ p.name }}</strong></td>
+                <td>#{{ p.provider_id }}</td>
+                <td>{{ p.voice or '-' }}</td>
+                <td>
+                    <code class="url-box" id="url-{{ p.name }}">
+                        /tts?token=YOUR_TOKEN&preset={{ p.name }}&text={{ '{{' }}speakText{{ '}}' }}
+                    </code>
+                </td>
+                <td>
+                    <button class="btn-small" onclick="copyUrl('url-{{ p.name }}')">Copy</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No presets configured. Go to <a href="/admin/setup">Setup</a> first.</p>
+    {% endif %}
+
+    <div class="note">
+        <h3>Important Notes</h3>
+        <ul>
+            <li>Replace <code>YOUR_TOKEN</code> with your actual gateway token from <code>.env</code></li>
+            <li>The reading app must URL-encode <code>{{ '{{' }}speakText{{ '}}' }}</code> properly</li>
+            <li>Never put your upstream API key in the reading app URL</li>
+            <li>For Legado (阅读): Use double curly braces <code>{{\{\{}speakText{{\}\}}}</code>. The app auto-encodes the text.</li>
+            <li>If accessing from outside, use Tailscale / WireGuard / Cloudflare Tunnel</li>
+            <li>Do not expose port 8000 directly to the public internet</li>
+        </ul>
+    </div>
+</section>
+
+<section>
+    <h2>Cache Status</h2>
+    <div class="stats">
+        <div class="stat">
+            <span class="stat-value">{{ cache_stats.file_count }}</span>
+            <span class="stat-label">Cached Files</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ (cache_stats.total_size_bytes / 1024 / 1024) | round(1) }} MB</span>
+            <span class="stat-label">Cache Size</span>
+        </div>
+    </div>
+</section>
+
+<script>
+function copyUrl(id) {
+    const el = document.getElementById(id);
+    const text = el.textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        alert('URL copied!');
+    }).catch(() => {
+        prompt('Copy this URL:', text);
+    });
+}
+</script>
+
+{% endblock %}

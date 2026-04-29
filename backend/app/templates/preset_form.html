@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if editing else 'Add' }} Preset{% endblock %}
+{% block content %}
+
+<h1>{{ 'Edit' if editing else 'Add' }} Preset</h1>
+
+<form method="post" action="/admin/api/presets/{{ preset.id }}/edit" class="form-grid">
+    <label>Name * <input type="text" name="name" value="{{ preset.name }}" required></label>
+    <label>Provider *
+    <select name="provider_id">
+        {% for p in providers %}
+        <option value="{{ p.id }}" {{ 'selected' if p.id == preset.provider_id }}>{{ p.name }} ({{ p.model }})</option>
+        {% endfor %}
+    </select>
+    </label>
+    <label>Voice <input type="text" name="voice" value="{{ preset.voice or '' }}"></label>
+    <label>Style <input type="text" name="style" value="{{ preset.style or '' }}"></label>
+    <label>Format <select name="format"><option value="mp3" {{ 'selected' if preset.format == 'mp3' }}>mp3</option><option value="wav" {{ 'selected' if preset.format == 'wav' }}>wav</option></select></label>
+    <label>Speed <input type="number" name="speed" value="{{ preset.speed }}" step="0.05" min="0.25" max="4.0"></label>
+    <label>Text Prefix <input type="text" name="text_prefix" value="{{ preset.text_prefix or '' }}"></label>
+    <label>Text Suffix <input type="text" name="text_suffix" value="{{ preset.text_suffix or '' }}"></label>
+    <label class="form-actions">
+        <button type="submit">Save</button>
+        <a href="/admin/setup">Cancel</a>
+    </label>
+</form>
+
+{% endblock %}
